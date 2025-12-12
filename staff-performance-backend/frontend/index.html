@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Staff Performance Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-root">
+
+    <!-- LOGIN VIEW -->
+    <div id="login-view" class="view active">
+      <div class="login-background">
+        <div class="login-card-wrapper">
+          <!-- Big logo on top of card -->
+          <div class="login-logo-large">
+            <img src="SB_logo.jpg" alt="Social Berries" />
+          </div>
+
+          <div class="auth-card">
+            <div class="auth-card-header">
+              <!-- Small logo inside card top-left -->
+              <div class="auth-card-logo">
+                <img src="SB_logo.jpg" alt="Social Berries" />
+              </div>
+              <div class="auth-card-title">
+                <h1>Staff Performance Tracker</h1>
+                <p class="muted">
+                  Login with your registered Social Berries credentials.
+                </p>
+              </div>
+            </div>
+
+            <form id="login-form" class="form">
+              <div class="form-group">
+                <label for="login-email">Work Email</label>
+                <input
+                  type="email"
+                  id="login-email"
+                  placeholder="you@socialberries.io"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="login-password">Password</label>
+                <div class="password-field">
+                  <input
+                    type="password"
+                    id="login-password"
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    id="toggle-password"
+                    class="password-toggle"
+                    aria-label="Show password"
+                  >
+                    👁
+                  </button>
+                </div>
+              </div>
+
+              <p id="login-error" class="error-text"></p>
+
+              <button type="submit" class="btn primary-btn full-width">
+                Login
+              </button>
+
+              <p class="login-footer-text">
+                Need access? Contact your manager or HR team.
+              </p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PORTAL VIEW -->
+    <div id="portal-view" class="view">
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-logo">
+            <img src="SB_logo.jpg" alt="Social Berries" />
+          </div>
+          <div class="topbar-app-text">
+            <span class="app-title">Staff Performance Tracker</span>
+            <span class="app-subtitle">Social Berries</span>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="user-info">
+            <span id="emp-name" class="user-name">Employee Name</span>
+            <span id="emp-email" class="user-email">• employee@example.com</span>
+          </div>
+          <button id="change-password-btn" class="btn ghost-btn small-btn">
+            Change Password
+          </button>
+          <button id="logout-btn" class="btn danger-btn small-btn">
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <!-- MAIN CONTENT -->
+      <main class="main-layout">
+        <!-- SIDE NAV -->
+        <nav class="sidebar">
+          <div class="sidebar-section-title">Menu</div>
+          <button class="tab-button active" data-tab="dashboard-tab">
+            Dashboard
+          </button>
+          <button class="tab-button" data-tab="calls-tab">
+            My Calls
+          </button>
+          <button class="tab-button" data-tab="payments-tab">
+            Payments
+          </button>
+          <button class="tab-button" data-tab="incentives-tab">
+            Incentives
+          </button>
+          <!-- Manager tab (shown only for role=manager via JS) -->
+          <button
+            class="tab-button"
+            data-tab="manager-panel-content"
+            id="manager-tab"
+            style="display: none;"
+          >
+            Manager Panel
+          </button>
+        </nav>
+
+        <!-- CONTENT AREA -->
+        <section class="content-area">
+          <!-- DASHBOARD TAB -->
+          <section id="dashboard-tab" class="tab-content active">
+            <div class="section-header">
+              <div>
+                <h2>Dashboard Overview</h2>
+                <span id="dashboard-period" class="muted"></span>
+              </div>
+              <!-- Dashboard Date Filter -->
+              <div class="filter-row" style="margin-top: 8px;">
+                <div class="form-group inline">
+                  <label for="dash-start-date">From</label>
+                  <input type="date" id="dash-start-date" />
+                </div>
+                <div class="form-group inline">
+                  <label for="dash-end-date">To</label>
+                  <input type="date" id="dash-end-date" />
+                </div>
+                <button
+                  id="dash-apply-filter"
+                  class="btn primary-btn small-btn"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+
+            <!-- Welcome card -->
+            <div class="card welcome-card">
+              <div class="welcome-left">
+                <h3 id="welcome-title">Welcome back,</h3>
+                <p id="welcome-subtitle" class="muted">Your role</p>
+                <p id="emp-doj" class="muted tiny-text"></p>
+              </div>
+              <div class="welcome-right">
+                <p class="welcome-quote-label">Today’s Reminder</p>
+                <p id="welcome-quote" class="welcome-quote">
+                  Every call today builds your pipeline for tomorrow.
+                </p>
+              </div>
+            </div>
+
+            <!-- Target Panels Container -->
+            <div id="target-panels-container" class="target-panels-grid"></div>
+
+            <!-- Stats grid (3 cards per row on desktop) -->
+            <div class="stats-grid">
+              <!-- Calls summary -->
+              <div class="card stats-card">
+                <h3>Calls Summary</h3>
+                <div class="stats-row">
+                  <div class="stats-item">
+                    <span class="stats-label">Total Calls</span>
+                    <span id="dash-total-calls" class="stats-value">0</span>
+                  </div>
+                  <div class="stats-item">
+                    <span class="stats-label">Answered</span>
+                    <span id="dash-answered-calls" class="stats-value">0</span>
+                  </div>
+                  <div class="stats-item">
+                    <span class="stats-label">Demos</span>
+                    <span id="dash-total-demos" class="stats-value">0</span>
+                  </div>
+                  <div class="stats-item">
+                    <span class="stats-label">Total Time (min)</span>
+                    <span id="dash-total-time" class="stats-value">0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Revenue summary -->
+              <div class="card stats-card">
+                <h3>Revenue Summary</h3>
+                <div class="stats-row">
+                  <div class="stats-item">
+                    <span class="stats-label">Total Revenue</span>
+                    <span id="dash-total-revenue" class="stats-value">₹0</span>
+                  </div>
+                  <div class="stats-item">
+                    <span class="stats-label">New Revenue</span>
+                    <span id="dash-new-revenue" class="stats-value">₹0</span>
+                  </div>
+                  <div class="stats-item">
+                    <span class="stats-label">Repeat Revenue</span>
+                    <span id="dash-repeat-revenue" class="stats-value">₹0</span>
+                  </div>
+                  <div class="stats-item">
+                    <span class="stats-label">Total No.of Payments</span>
+                    <span id="dash-total-payments" class="stats-value">0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Conversion summary -->
+              <div class="card stats-card">
+                <h3>Conversion Funnel</h3>
+                <div class="stats-row">
+                  <div class="stats-item">
+                    <span class="stats-label">Answered Rate</span>
+                    <span id="dash-answered-rate" class="stats-value">0%</span>
+                  </div>
+                  <div class="stats-item">
+                    <span class="stats-label">Demo Conversion</span>
+                    <span id="dash-demo-rate" class="stats-value">0%</span>
+                  </div>
+                  <div class="stats-item">
+                    <span class="stats-label">Payment Conversion</span>
+                    <span id="dash-payment-rate" class="stats-value">0%</span>
+                  </div>
+                  <div class="stats-item">
+                    <span class="stats-label">Revenue / Call</span>
+                    <span id="dash-revenue-per-call" class="stats-value">₹0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Incentive summary -->
+              <div class="card stats-card">
+                <h3>Incentives</h3>
+                <!-- Simplified to one main value -->
+                <div class="stats-row single-stat">
+                  <span class="stats-label">Incentive Earned</span>
+                  <span id="dash-incentive-earned" class="stats-value large">₹0</span>
+                </div>
+              </div>
+            </div>
+
+          </section>
+
+          <!-- CALLS TAB -->
+          <section id="calls-tab" class="tab-content">
+            <div class="section-header">
+              <h2>My Call Entries</h2>
+            </div>
+
+            <!-- Daily calls form -->
+            <div class="card" style="margin-bottom: 16px;">
+              <h3>Enter Today’s Calls</h3>
+              <p class="muted tiny-text">
+                Only one entry per day is allowed. After submission, you cannot
+                edit it. For changes, please contact your manager.
+              </p>
+
+              <form id="calls-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="call-date">Date</label>
+                    <input type="date" id="call-date" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="answered-calls">Answered Calls</label>
+                    <input
+                      type="number"
+                      id="answered-calls"
+                      min="0"
+                      value="0"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="unanswered-calls">Unanswered Calls</label>
+                    <input
+                      type="number"
+                      id="unanswered-calls"
+                      min="0"
+                      value="0"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="total-calls">Total Calls</label>
+                    <input type="number" id="total-calls" readonly />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="call-time-min">Call Time (min)</label>
+                    <input
+                      type="number"
+                      id="call-time-min"
+                      min="0"
+                      value="0"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="demos-conducted">Demos Conducted</label>
+                    <input
+                      type="number"
+                      id="demos-conducted"
+                      min="0"
+                      value="0"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="demo-time-min">Demo Time (min)</label>
+                    <input
+                      type="number"
+                      id="demo-time-min"
+                      min="0"
+                      value="0"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="total-time-min">Total Time (min)</label>
+                    <input type="number" id="total-time-min" readonly />
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label>CRM Deal Links (for demo customers)</label>
+                    <div id="demo-cards-wrapper">
+                      <div class="dynamic-input-row">
+                        <input
+                          type="url"
+                          class="demo-card-input"
+                          placeholder="https://antcrm.com/demo/card-123"
+                        />
+                        <button type="button" class="btn small-btn add-demo-card">
+                          Add
+                        </button>
+                        <button
+                          type="button"
+                          class="btn small-btn danger-btn remove-demo-card"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group flex-1">
+                    <label>Google Meet Links (optional)</label>
+                    <div id="meet-links-wrapper">
+                      <div class="dynamic-input-row">
+                        <input
+                          type="url"
+                          class="meet-link-input"
+                          placeholder="https://meet.google.com/abc-defg-hij"
+                        />
+                        <button type="button" class="btn small-btn add-meet-link">
+                          Add
+                        </button>
+                        <button
+                          type="button"
+                          class="btn small-btn danger-btn remove-meet-link"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label for="call-notes">Notes (optional)</label>
+                    <textarea id="call-notes" rows="2"></textarea>
+                  </div>
+                </div>
+
+                <p id="calls-form-error" class="error-text"></p>
+
+                <button type="submit" class="btn primary-btn full-width">
+                  Submit Today’s Entry
+                </button>
+              </form>
+            </div>
+
+            <!-- Filter + table controls -->
+            <div class="filter-row">
+              <div class="form-group inline">
+                <label for="calls-start-date">From</label>
+                <input type="date" id="calls-start-date" />
+              </div>
+              <div class="form-group inline">
+                <label for="calls-end-date">To</label>
+                <input type="date" id="calls-end-date" />
+              </div>
+              <button
+                id="calls-apply-filter"
+                class="btn primary-btn small-btn"
+              >
+                Apply
+              </button>
+
+              <div class="table-controls inline">
+                <label>
+                  Page size:
+                  <select id="calls-page-size">
+                    <option value="5">5</option>
+                    <option value="25">25</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="table-controls">
+              <div class="pagination">
+                <button id="calls-prev-page" class="btn small-btn">
+                  &laquo; Prev
+                </button>
+                <span id="calls-page-info" class="muted"></span>
+                <button id="calls-next-page" class="btn small-btn">
+                  Next &raquo;
+                </button>
+              </div>
+            </div>
+
+            <!-- Calls table -->
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Answered</th>
+                    <th>Unanswered</th>
+                    <th>Total</th>
+                    <th>Call Time (min)</th>
+                    <th>Demo Time (min)</th>
+                    <th>Total Time (min)</th>
+                    <th>Demos</th>
+                    <th>CRM Links</th>
+                    <th>Meet Links</th>
+                    <th>Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="calls-table-body">
+                  <tr>
+                    <td colspan="11" class="muted">Loading…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- PAYMENTS TAB -->
+          <section id="payments-tab" class="tab-content">
+            <div class="section-header">
+              <h2>My Payments</h2>
+            </div>
+
+            <div class="filter-row">
+              <!-- Date Filters -->
+              <div class="form-group inline">
+                <label for="payments-start-date">From</label>
+                <input type="date" id="payments-start-date" />
+              </div>
+              <div class="form-group inline">
+                <label for="payments-end-date">To</label>
+                <input type="date" id="payments-end-date" />
+              </div>
+              <button
+                id="payments-apply-filter"
+                class="btn primary-btn small-btn"
+              >
+                Apply
+              </button>
+
+              <div class="table-controls inline">
+                <label>
+                  Page size:
+                  <select id="payments-page-size">
+                    <option value="5">5</option>
+                    <option value="25">25</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="table-controls">
+              <div class="pagination">
+                <button id="payments-prev-page" class="btn small-btn">
+                  &laquo; Prev
+                </button>
+                <span id="payments-page-info" class="muted"></span>
+                <button id="payments-next-page" class="btn small-btn">
+                  Next &raquo;
+                </button>
+              </div>
+            </div>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Customer Type</th>
+                    <th>Service</th>
+                    <th>Amount Paid</th>
+                    <th>CRM Link</th>
+                  </tr>
+                </thead>
+                <tbody id="payments-table-body">
+                  <tr>
+                    <td colspan="6" class="muted">Loading…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- INCENTIVES TAB -->
+          <section id="incentives-tab" class="tab-content">
+            <div class="section-header">
+              <h2>Incentives</h2>
+            </div>
+
+            <!-- Summary cards -->
+            <div class="incentive-summary-grid">
+              <div class="card">
+                <h3>Current Month Incentive</h3>
+                <p class="muted tiny-text" id="inc-current-period">-</p>
+                <p id="inc-current-total" class="highlight-number">₹0</p>
+              </div>
+              <div class="card">
+                <h3>Selected Range Incentive</h3>
+                <p class="muted tiny-text" id="inc-range-period">-</p>
+                <p id="inc-range-total" class="highlight-number">₹0</p>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filter-row">
+              <div class="form-group inline">
+                <label for="inc-start-date">From</label>
+                <input type="date" id="inc-start-date" />
+              </div>
+              <div class="form-group inline">
+                <label for="inc-end-date">To</label>
+                <input type="date" id="inc-end-date" />
+              </div>
+              <button id="inc-apply-filter" class="btn primary-btn small-btn">
+                Apply
+              </button>
+
+              <div class="table-controls inline">
+                <label>
+                  Page size:
+                  <select id="inc-page-size">
+                    <option value="5">5</option>
+                    <option value="25">25</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="table-controls">
+              <div class="pagination">
+                <button id="inc-prev-page" class="btn small-btn">
+                  &laquo; Prev
+                </button>
+                <span id="inc-page-info" class="muted"></span>
+                <button id="inc-next-page" class="btn small-btn">
+                  Next &raquo;
+                </button>
+              </div>
+            </div>
+
+            <!-- Incentives table -->
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Customer Type</th>
+                    <th>Service</th>
+                    <th>Amount Paid</th>
+                    <th>Base Amount</th>
+                    <th>Rate</th>
+                    <th>Incentive</th>
+                  </tr>
+                </thead>
+                <tbody id="inc-table-body">
+                  <tr>
+                    <td colspan="8" class="muted">Loading…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- MANAGER TAB -->
+          <section id="manager-panel-content" class="tab-content">
+            <div class="section-header">
+              <h2>Manager Panel – Employee Payments</h2>
+            </div>
+
+            <p class="muted tiny-text">
+              Select your mapped employees, add payments on their behalf, and review/edit incentives.
+            </p>
+
+            <div class="manager-layout">
+              <!-- LEFT: Add Payment Form -->
+              <div class="card">
+                <h3>Add Payment for Employee</h3>
+                <form id="manager-add-payment-form">
+                  <div class="form-group">
+                    <label for="manager-employee-select">Employee</label>
+                    <select id="manager-employee-select" required>
+                      <option value="">-- Select Employee --</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="manager-payment-date">Date</label>
+                    <input type="date" id="manager-payment-date" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="manager-customer">Customer</label>
+                    <input type="text" id="manager-customer" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="manager-customer-type">Customer Type</label>
+                    <select id="manager-customer-type" required>
+                      <option value="">-- Select --</option>
+                      <option value="New">New</option>
+                      <option value="Repeat">Repeat</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="manager-service-type">Service Type</label>
+                    <select id="manager-service-type" required>
+                      <option value="">-- Select --</option>
+                      <option value="Voice Call">Voice Call</option>
+                      <option value="RCS Registration">RCS Registration</option>
+                      <option value="RCS Recharge">RCS Recharge</option>
+                      <option value="Whatsapp Registration">Whatsapp Registration</option>
+                      <option value="Whatsapp Recharge">Whatsapp Recharge</option>
+                      <option value="SMS">SMS</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="manager-amount-paid">Amount Paid</label>
+                    <input type="number" id="manager-amount-paid" step="0.01" min="0" required />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="manager-crm-link">CRM Link (optional)</label>
+                    <input type="url" id="manager-crm-link" placeholder="https://..." />
+                  </div>
+
+                  <p id="manager-add-payment-message" class="status-message"></p>
+                  <button type="submit" class="btn primary-btn full-width">
+                    Save Payment
+                  </button>
+                </form>
+              </div>
+
+              <!-- RIGHT: Filter + Payments Table -->
+              <div class="manager-tables-column">
+                <!-- Team Payments Section -->
+                <div class="card">
+                    <div class="section-header">
+                        <h3>Team Payments</h3>
+                        <div class="filter-controls">
+                            <label for="manager-filter-employee">Employee</label>
+                            <select id="manager-filter-employee" class="form-control"></select>
+                            <label for="manager-filter-start-date">From</label>
+                            <input type="date" id="manager-filter-start-date" class="form-control">
+                            <label for="manager-filter-end-date">To</label>
+                            <input type="date" id="manager-filter-end-date" class="form-control">
+                            <button id="manager-filter-btn" class="btn primary-btn small-btn">Apply</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Employee</th>
+                                    <th>Customer</th>
+                                    <th>Customer Type</th>
+                                    <th>Service</th>
+                                    <th>Amount Paid</th>
+                                    <th>CRM Link</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manager-payments-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-controls">
+                        <select id="manager-page-size" class="form-control" style="display: none;"><option value="5">5</option></select>
+                        <button id="manager-prev-page" class="btn secondary-btn">&laquo; Prev</button>
+                        <span id="manager-page-info"></span>
+                        <button id="manager-next-page" class="btn secondary-btn">Next &raquo;</button>
+                    </div>
+                </div>
+
+                <hr style="margin: 2rem 0;">
+
+                <!-- Team Incentives Section -->
+                <div class="card">
+                    <div class="section-header">
+                        <h3>Team Incentives</h3>
+                        <div class="filter-controls">
+                            <label for="manager-inc-filter-employee">Employee</label>
+                            <select id="manager-inc-filter-employee" class="form-control"></select>
+                            <label for="manager-inc-filter-start-date">From</label>
+                            <input type="date" id="manager-inc-filter-start-date" class="form-control">
+                            <label for="manager-inc-filter-end-date">To</label>
+                            <input type="date" id="manager-inc-filter-end-date" class="form-control">
+                            <button id="manager-inc-filter-btn" class="btn primary-btn small-btn">Apply</button>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Employee</th>
+                                    <th>Customer</th>
+                                    <th>Cust. Type</th>
+                                    <th>Service Type</th>
+                                    <th>Amount Paid</th>
+                                    <th>Base Amount</th>
+                                    <th>Rate</th>
+                                    <th>Incentive</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manager-incentives-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination-controls">
+                        <select id="manager-inc-page-size" class="form-control">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                        </select>
+                        <button id="manager-inc-prev-page" class="btn secondary-btn">&laquo; Prev</button>
+                        <span id="manager-inc-page-info"></span>
+                        <button id="manager-inc-next-page" class="btn secondary-btn">Next &raquo;</button>
+                    </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Incentive Modal -->
+            <div id="manager-edit-modal" class="modal hidden">
+              <div class="modal-content">
+                <h3>Edit Incentive</h3>
+                <form id="manager-edit-form">
+                  <input type="hidden" id="manager-edit-payment-id" />
+
+                  <div class="form-group">
+                    <label for="manager-edit-base-amount">Base Amount</label>
+                    <input type="number" id="manager-edit-base-amount" step="0.01" min="0" />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="manager-edit-rate">Incentive %</label>
+                    <input type="number" id="manager-edit-rate" step="0.01" min="0" />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="manager-edit-amount">Incentive Amount</label>
+                    <input type="number" id="manager-edit-amount" step="0.01" min="0" />
+                  </div>
+
+                  <p id="manager-edit-message" class="status-message"></p>
+
+                  <div class="modal-actions">
+                    <button type="submit" class="btn primary-btn">Save</button>
+                    <button type="button" class="btn secondary-btn" id="manager-edit-cancel">
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
+<style>
+  .manager-layout {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 1.5rem;
+  }
+  .manager-tables-column .table-responsive {
+    min-height: 280px; /* Ensures space for ~5 rows + header */
+    display: block; /* Ensures min-height is respected */
+  }
+  .manager-tables-column .pagination-controls {
+    margin-top: 1rem; /* Adds space above pagination */
+  }
+</style>

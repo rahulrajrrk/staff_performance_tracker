@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "principal-media-479705-g6",
+    "public": "frontend",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
