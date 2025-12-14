@@ -7,31 +7,56 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write   # REQUIRED for Workload Identity Federation (WIF)
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Google Cloud SDK
+      # ✅ Keyless auth to GCP using Workload Identity Federation
+      - name: Auth to Google Cloud (WIF)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+
+      - name: Set up gcloud SDK
         uses: google-github-actions/setup-gcloud@v2
         with:
-          # The GCP project ID to deploy to. Store this as a secret in your GitHub repo.
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          # A JSON key for a service account with Cloud Run and Artifact Registry permissions.
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Configure Docker for Google Container Registry
-        run: gcloud auth configure-docker
+      # Ensure Artifact Registry exists (optional safety; harmless if already exists)
+      - name: Ensure Artifact Registry repo exists
+        run: |
+          gcloud artifacts repositories describe staff-tracker-repo \
+            --location=${{ secrets.GCP_REGION }} \
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+          || gcloud artifacts repositories create staff-tracker-repo \
+            --repository-format=docker \
+            --location=${{ secrets.GCP_REGION }} \
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+            --description="Docker repo for Staff Performance Tracker"
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
       - name: Build and push Docker image
         run: |
-          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/staff-performance-api:$GITHUB_SHA .
-          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/staff-performance-api:$GITHUB_SHA
+          IMAGE="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/staff-tracker-repo/staff-performance-api:${GITHUB_SHA}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy staff-performance-api \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/staff-performance-api:$GITHUB_SHA \
+            --image "$IMAGE" \
             --region ${{ secrets.GCP_REGION }} \
             --platform managed \
             --allow-unauthenticated \
-            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }}"
+            --set-env-vars "GOOGLE_CLOUD_PROJECT=${{ secrets.GCP_PROJECT_ID }}" \
+            --project ${{ secrets.GCP_PROJECT_ID }}
