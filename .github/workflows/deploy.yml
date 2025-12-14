@@ -10,13 +10,12 @@ jobs:
 
     permissions:
       contents: read
-      id-token: write   # REQUIRED for Workload Identity Federation (WIF)
+      id-token: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ✅ Keyless auth to GCP using Workload Identity Federation
       - name: Auth to Google Cloud (WIF)
         uses: google-github-actions/auth@v2
         with:
@@ -28,7 +27,6 @@ jobs:
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # Ensure Artifact Registry exists (optional safety; harmless if already exists)
       - name: Ensure Artifact Registry repo exists
         run: |
           gcloud artifacts repositories describe staff-tracker-repo \
@@ -44,10 +42,11 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
 
+      # ✅ IMPORTANT: Build from staff-performance-backend folder
       - name: Build and push Docker image
         run: |
           IMAGE="${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/staff-tracker-repo/staff-performance-api:${GITHUB_SHA}"
-          docker build -t "$IMAGE" .
+          docker build -t "$IMAGE" -f staff-performance-backend/Dockerfile staff-performance-backend
           docker push "$IMAGE"
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
